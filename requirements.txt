@@ -1,0 +1,36 @@
+# FastAPI y servidor
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Validación y configuración
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Whisper y procesamiento de audio (faster-whisper con CTranslate2)
+# faster-whisper es mucho más rápido que openai-whisper y soporta cuantización
+# Nota: Para Python 3.14, instalar PyAV primero:
+#   brew install ffmpeg pkg-config
+#   export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
+#   pip install "av>=12.0.0" --no-build-isolation
+# Luego instalar faster-whisper y dependencias:
+faster-whisper>=1.0.0
+ctranslate2>=4.0.0
+huggingface-hub>=0.21
+tokenizers>=0.13
+# PyAV debe instalarse manualmente (ver arriba) debido a problemas de compilación con Python 3.14
+# av>=12.0.0
+# onnxruntime es opcional pero recomendado para el filtro VAD (Voice Activity Detection)
+# Mejora la precisión al filtrar silencios. Si no está instalado, el VAD se desactiva automáticamente.
+onnxruntime>=1.15.0
+
+# Base de datos (solo para API keys)
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Text-to-Speech (TTS)
+gtts>=2.5.0
+elevenlabs>=1.0.0  # Para ElevenLabs TTS (opcional, solo si TTS_PROVIDER=elevenlabs)
+
+# Utilidades
+python-dotenv==1.0.0

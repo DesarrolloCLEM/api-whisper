@@ -1,0 +1,276 @@
+{
+	"info": {
+		"_postman_id": "whisper-api-collection",
+		"name": "Whisper API",
+		"description": "Colección completa para la API de Whisper con faster-whisper",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Verifica el estado de salud de la API"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API Keys",
+			"item": [
+				{
+					"name": "Crear API Key",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Cliente Producción\",\n    \"description\": \"API key para cliente en producción\",\n    \"expires_days\": 365\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api-keys",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-keys"
+							]
+						},
+						"description": "Crea una nueva API key. ⚠️ IMPORTANTE: La API key completa solo se mostrará una vez al crearla."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar API Keys",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api-keys?skip=0&limit=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-keys"
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Lista todas las API keys (las keys están enmascaradas por seguridad)"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener API Key",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api-keys/{{api_key_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-keys",
+								"{{api_key_id}}"
+							]
+						},
+						"description": "Obtiene una API key por ID (la key está enmascarada por seguridad)"
+					},
+					"response": []
+				},
+				{
+					"name": "Activar API Key",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api-keys/{{api_key_id}}/activate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-keys",
+								"{{api_key_id}}",
+								"activate"
+							]
+						},
+						"description": "Activa una API key"
+					},
+					"response": []
+				},
+				{
+					"name": "Desactivar API Key",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api-keys/{{api_key_id}}/deactivate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-keys",
+								"{{api_key_id}}",
+								"deactivate"
+							]
+						},
+						"description": "Desactiva una API key"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar API Key",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api-keys/{{api_key_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-keys",
+								"{{api_key_id}}"
+							]
+						},
+						"description": "Elimina permanentemente una API key"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Whisper",
+			"item": [
+				{
+					"name": "Audio a Texto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "API Key requerida"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "audio_file",
+									"type": "file",
+									"src": [],
+									"description": "Archivo de audio (wav, mp3, m4a, etc.)"
+								},
+								{
+									"key": "language",
+									"value": "es",
+									"type": "text",
+									"description": "Código de idioma (es para español, en para inglés, auto para detección automática)"
+								},
+								{
+									"key": "task",
+									"value": "transcribe",
+									"type": "text",
+									"description": "transcribe para transcribir o translate para traducir al inglés"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/whisper/audio-to-text",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"whisper",
+								"audio-to-text"
+							]
+						},
+						"description": "Convierte un archivo de audio a texto usando faster-whisper con modelo large-v3-turbo optimizado para español.\n\nRequiere autenticación mediante API Key (header: X-API-Key)"
+					},
+					"response": []
+				},
+				{
+					"name": "Texto a Audio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "API Key requerida"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Hola, este es un ejemplo de texto a audio\",\n    \"language\": \"es\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/whisper/text-to-audio",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"whisper",
+								"text-to-audio"
+							]
+						},
+						"description": "Convierte texto a audio usando gTTS (Google Text-to-Speech).\n\n✅ Retorna el audio directamente como archivo MP3 que se puede reproducir en el navegador o descargar.\n\nRequiere autenticación mediante API Key (header: X-API-Key)"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "",
+			"type": "string",
+			"description": "API Key obtenida del endpoint de crear API Key"
+		},
+		{
+			"key": "api_key_id",
+			"value": "",
+			"type": "string",
+			"description": "ID de la API Key (se obtiene al crear una)"
+		}
+	]
+}
