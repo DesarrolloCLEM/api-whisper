@@ -1,11 +1,16 @@
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from app.config import get_settings
 from app.core.exceptions import APIException, exception_handler
 from app.core.database import Base, engine
 from app.services.health.src.controller import router as health_router
 from app.services.api_keys.src.controller import router as api_keys_router
 from app.services.whisper.src.controller import router as whisper_router
+
+logger = logging.getLogger("uvicorn.error")
 
 # Obtener configuración
 settings = get_settings()
@@ -32,6 +37,37 @@ app.add_middleware(
 
 # Registrar manejador de excepciones
 app.add_exception_handler(APIException, exception_handler)
+
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Log detallado para 422 Unprocessable Entity (errores de validación)."""
+    body = b""
+    try:
+        body = await request.body()
+    except Exception:
+        pass
+    body_preview = body.decode("utf-8", errors="replace")[:500] if body else "(vacío)"
+    errors = exc.errors()
+    logger.warning(
+        "422 Validation Error | path=%s %s | content_type=%s | body_preview=%s | errors=%s",
+        request.method,
+        request.url.path,
+        request.headers.get("content-type", ""),
+        body_preview,
+        errors,
+    )
+    # Mensaje más legible en consola
+    for i, err in enumerate(errors, 1):
+        loc = " -> ".join(str(x) for x in err.get("loc", ()))
+        msg = err.get("msg", "")
+        logger.warning("  [%d] %s: %s", i, loc, msg)
+    return JSONResponse(
+        status_code=422,
+        content={"detail": errors},
+    )
+
+
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 # Registrar routers de servicios
 app.include_router(health_router)

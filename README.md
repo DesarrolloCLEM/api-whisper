@@ -33,37 +33,26 @@ Cada servicio contiene:
 
 ## Instalación
 
+**Requisito**: Python 3.11, 3.12, 3.13 o 3.14. En macOS puede ser necesario usar `python3` en lugar de `python`.
+
 1. Crear entorno virtual:
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # En Windows: venv\Scripts\activate
 ```
 
-2. Instalar dependencias del sistema (solo macOS con Python 3.14):
+2. Instalar dependencias de Python:
 ```bash
-# Instalar herramientas necesarias para PyAV
-brew install ffmpeg pkg-config
-export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
-```
-
-3. Instalar dependencias de Python:
-```bash
-# Primero instalar PyAV (requerido para faster-whisper)
-pip install "av>=12.0.0" --no-build-isolation
-
-# Luego instalar el resto de dependencias
 pip install -r requirements.txt
 ```
 
-**Nota**: Si tienes Python 3.13 o anterior, puedes instalar directamente con `pip install -r requirements.txt`
-
-4. Configurar variables de entorno:
+3. Configurar variables de entorno:
 ```bash
 cp .env.example .env
 # Editar .env con tus configuraciones
 ```
 
-5. Inicializar base de datos:
+4. Inicializar la base de datos:
 ```bash
 python scripts/init_db.py
 ```

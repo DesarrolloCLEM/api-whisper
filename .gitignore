@@ -47,3 +47,6 @@ Thumbs.db
 
 # Whisper models cache
 .whisper_cache/
+
+# Audios recibidos (guardados antes de transcribir)
+uploads/

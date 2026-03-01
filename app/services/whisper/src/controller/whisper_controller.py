@@ -38,8 +38,12 @@ async def audio_to_text(
     # Crear request DTO
     request = AudioToTextRequest(language=language, task=task)
     
-    # Procesar
-    return await service.convert_audio_to_text(audio_file=audio_bytes, request=request)
+    # Procesar (guardando el audio en carpeta antes de transcribir)
+    return await service.convert_audio_to_text(
+        audio_file=audio_bytes,
+        request=request,
+        original_filename=audio_file.filename
+    )
 
 
 @router.post("/text-to-audio")

@@ -5,7 +5,12 @@ from app.services.whisper.src.model.whisper_dto import (
 )
 from app.services.whisper.src.utils.audio_processor import AudioProcessor
 from app.core.exceptions import APIException
+from app.config import get_settings
 from fastapi import status
+from pathlib import Path
+from datetime import datetime
+from typing import Optional
+import uuid
 
 
 class WhisperService:
@@ -14,13 +19,26 @@ class WhisperService:
     def __init__(self):
         self.audio_processor = AudioProcessor()
     
+    def _extension_from_filename(self, filename: Optional[str]) -> str:
+        if not filename or "." not in filename:
+            return ".wav"
+        return "." + filename.rsplit(".", 1)[-1].lower()
+
     async def convert_audio_to_text(
         self,
         audio_file: bytes,
-        request: AudioToTextRequest
+        request: AudioToTextRequest,
+        original_filename: Optional[str] = None
     ) -> AudioToTextResponse:
-        """Convierte audio a texto"""
+        """Convierte audio a texto. Guarda el audio en disco antes de transcribir."""
         try:
+            settings = get_settings()
+            upload_dir = Path(settings.audio_uploads_dir)
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            ext = self._extension_from_filename(original_filename)
+            unique_name = f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}{ext}"
+            save_path = upload_dir / unique_name
+            save_path.write_bytes(audio_file)
             text, language, duration = await self.audio_processor.audio_to_text(
                 audio_file=audio_file,
                 language=request.language,

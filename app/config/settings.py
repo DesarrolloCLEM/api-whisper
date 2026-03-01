@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     api_key_header_name: str = "X-API-Key"
     api_key_length: int = 32
     
+    # Carpeta donde se guardan los audios recibidos antes de transcribir
+    audio_uploads_dir: str = "uploads/audio"
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
