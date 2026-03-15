@@ -63,7 +63,7 @@ python scripts/init_db.py
 El script lee automáticamente `host` y `port` del archivo `.env`:
 
 ```bash
-python run.py
+python3 run.py
 ```
 
 ### Opción 2: Ejecutar main.py directamente
