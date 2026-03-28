@@ -8,10 +8,12 @@ from app.services.whisper.src.model import (
 )
 from app.core.dependencies import get_api_key_user
 from typing import Optional
+import logging
 
 router = APIRouter(prefix="/whisper", tags=["Whisper"])
 
 service = WhisperService()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/audio-to-text", response_model=AudioToTextResponse)
@@ -34,16 +36,39 @@ async def audio_to_text(
     """
     # Leer el archivo de audio
     audio_bytes = await audio_file.read()
+    request_body = {
+        "filename": audio_file.filename,
+        "content_type": audio_file.content_type,
+        "audio_bytes": len(audio_bytes),
+        "language": language,
+        "task": task,
+    }
     
     # Crear request DTO
     request = AudioToTextRequest(language=language, task=task)
     
-    # Procesar (guardando el audio en carpeta antes de transcribir)
-    return await service.convert_audio_to_text(
-        audio_file=audio_bytes,
-        request=request,
-        original_filename=audio_file.filename
-    )
+    try:
+        # Procesar (guardando el audio en carpeta antes de transcribir)
+        response = await service.convert_audio_to_text(
+            audio_file=audio_bytes,
+            request=request,
+            original_filename=audio_file.filename
+        )
+        logger.info(
+            "audio-to-text OK | body=%s | response={text_len=%s, language=%s, duration=%s}",
+            request_body,
+            len(response.text or ""),
+            response.language,
+            response.duration,
+        )
+        return response
+    except Exception as e:
+        logger.exception(
+            "audio-to-text ERROR | body=%s | response_error=%s",
+            request_body,
+            str(e),
+        )
+        raise
 
 
 @router.post("/text-to-audio")
