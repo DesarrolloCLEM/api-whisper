@@ -1,4 +1,6 @@
 import logging
+import sys
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -73,6 +75,28 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.include_router(health_router)
 app.include_router(api_keys_router)
 app.include_router(whisper_router)
+
+
+@app.on_event("startup")
+def _configure_whisper_stt_console_logging() -> None:
+    """
+    Garantiza logs INFO de faster-whisper / controlador en consola.
+    El log_config de uvicorn en run.py no siempre enlaza app.* tras reload.
+    """
+    lg = logging.getLogger("app.services.whisper")
+    lg.setLevel(logging.INFO)
+    if lg.handlers:
+        return
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    lg.addHandler(handler)
+    lg.propagate = False
 
 
 @app.get("/")

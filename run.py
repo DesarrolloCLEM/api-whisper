@@ -38,7 +38,10 @@ _UVICORN_LOG_CONFIG = {
         "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
         "uvicorn.error": {"level": "INFO"},
         "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": False},
+        # Sin esto, los logger.info de app.* no aparecen (solo access de uvicorn).
+        "app": {"handlers": ["default"], "level": "INFO", "propagate": False},
     },
+    "root": {"handlers": ["default"], "level": "INFO"},
 }
 
 if __name__ == "__main__":

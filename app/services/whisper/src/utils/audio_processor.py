@@ -1,9 +1,22 @@
 import io
+import logging
 import tempfile
 import os
 from typing import Optional, Tuple
 from faster_whisper import WhisperModel
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
+
+
+def _temp_suffix_from_filename(filename: Optional[str]) -> str:
+    """Extensión coherente con el contenido (evita meter M4A en un .wav)."""
+    if not filename or "." not in filename:
+        return ".m4a"
+    ext = filename.rsplit(".", 1)[-1].lower()
+    if ext in ("mp3", "m4a", "aac", "wav", "ogg", "flac"):
+        return f".{ext}"
+    return ".m4a"
 
 
 class AudioProcessor:
@@ -46,7 +59,8 @@ class AudioProcessor:
         self,
         audio_file: bytes,
         language: Optional[str] = None,
-        task: str = "transcribe"
+        task: str = "transcribe",
+        original_filename: Optional[str] = None,
     ) -> Tuple[str, Optional[str], float]:
         """
         Convierte audio a texto usando faster-whisper
@@ -71,7 +85,8 @@ class AudioProcessor:
         
         # Crear archivo temporal para faster-whisper
         # faster-whisper necesita un archivo en disco o usar numpy array
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
+        tmp_suffix = _temp_suffix_from_filename(original_filename)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=tmp_suffix) as tmp_file:
             tmp_file.write(audio_file)
             tmp_file_path = tmp_file.name
         
@@ -90,29 +105,56 @@ class AudioProcessor:
                 "beam_size": 5,  # Balance entre velocidad y precisión
             }
             
-            # Solo usar VAD si onnxruntime está disponible
-            if vad_available:
+            # VAD opcional: con voz baja o clips cortos suele dejar casi silencio → alucinaciones del modelo
+            if vad_available and self.settings.whisper_vad_filter:
                 transcribe_kwargs["vad_filter"] = True
                 transcribe_kwargs["vad_parameters"] = dict(min_silence_duration_ms=500)
-            
+
+            logger.info(
+                "WHISPER_STT_IN | archivo_tmp=%s | bytes_entrada=%s | language_param=%s | task=%s | "
+                "vad_filter=%s | modelo=%s",
+                tmp_file_path,
+                len(audio_file),
+                language_param,
+                task,
+                transcribe_kwargs.get("vad_filter", False),
+                self.settings.whisper_model,
+            )
+
             segments, info = self.model.transcribe(
                 tmp_file_path,
                 **transcribe_kwargs
             )
-            
+
             # Obtener idioma detectado
             detected_language = info.language if hasattr(info, 'language') else language_param or "unknown"
-            
-            # Concatenar todos los segmentos
+
+            # Concatenar todos los segmentos (aquí se construye el texto final que verá el cliente)
             text_segments = []
             duration = 0.0
-            
-            for segment in segments:
+
+            for idx, segment in enumerate(segments):
+                piece = (segment.text or "").strip()
                 text_segments.append(segment.text)
                 duration = max(duration, segment.end)
-            
+                logger.info(
+                    "WHISPER_STT_SEGMENT | idx=%s | start=%.3f | end=%.3f | texto_segmento=%r",
+                    idx,
+                    segment.start,
+                    segment.end,
+                    piece,
+                )
+
             text = " ".join(text_segments).strip()
-            
+
+            logger.info(
+                "WHISPER_STT_OUT | idioma_detectado=%s | duracion_audio_s=%.3f | "
+                "texto_completo_generado_por_modelo=%r",
+                detected_language,
+                duration,
+                text,
+            )
+
             return text, detected_language, duration
         finally:
             # Limpiar archivo temporal

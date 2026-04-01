@@ -16,6 +16,13 @@ service = WhisperService()
 logger = logging.getLogger(__name__)
 
 
+def _preview_text(text: str, limit: int = 160) -> str:
+    normalized = " ".join((text or "").split())
+    if len(normalized) <= limit:
+        return normalized
+    return f"{normalized[:limit]}..."
+
+
 @router.post("/audio-to-text", response_model=AudioToTextResponse)
 async def audio_to_text(
     audio_file: UploadFile = File(..., description="Archivo de audio"),
@@ -54,12 +61,19 @@ async def audio_to_text(
             request=request,
             original_filename=audio_file.filename
         )
+        text_preview = _preview_text(response.text or "")
         logger.info(
-            "audio-to-text OK | body=%s | response={text_len=%s, language=%s, duration=%s}",
+            "audio-to-text OK | body=%s | response={text_len=%s, text_preview=%r, language=%s, duration=%s}",
             request_body,
             len(response.text or ""),
+            text_preview,
             response.language,
             response.duration,
+        )
+        # Texto exacto que devuelve la API al cliente (mismo que generó faster-whisper en audio_processor)
+        logger.info(
+            "audio-to-text RESPUESTA_JSON_text=%r",
+            response.text or "",
         )
         return response
     except Exception as e:
@@ -83,7 +97,19 @@ async def text_to_audio(
     
     Retorna el audio directamente como archivo MP3 que se puede reproducir.
     """
+    input_text_preview = _preview_text(request.text)
+    logger.info(
+        "text-to-audio IN | text_len=%s | text_preview=%r | language=%s",
+        len(request.text or ""),
+        input_text_preview,
+        request.language,
+    )
     audio_bytes, duration = await service.convert_text_to_audio(request=request)
+    logger.info(
+        "text-to-audio OUT | audio_bytes=%s | duration=%s",
+        len(audio_bytes),
+        duration,
+    )
     
     # Retornar el audio directamente como archivo binario
     return Response(

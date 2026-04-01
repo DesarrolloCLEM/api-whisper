@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     whisper_language: str = "es"  # Idioma por defecto (español)
     whisper_num_workers: int = 1  # Número de workers para procesamiento
     hf_token: str = ""  # Token opcional de Hugging Face para descargas más rápidas (opcional)
+    # VAD: en clips cortos / voz baja suele recortar casi todo el audio y Whisper alucina (ej. "suscríbete al canal")
+    whisper_vad_filter: bool = True  # En .env: WHISPER_VAD_FILTER=false para grabaciones móviles cortas
     
     # TTS Configuration (Text-to-Speech)
     tts_provider: str = "google"  # "google" para gTTS o "elevenlabs" para ElevenLabs

@@ -76,7 +76,8 @@ class WhisperService:
             text, language, duration = await self.audio_processor.audio_to_text(
                 audio_file=audio_file,
                 language=request.language,
-                task=request.task
+                task=request.task,
+                original_filename=original_filename,
             )
 
             return AudioToTextResponse(
