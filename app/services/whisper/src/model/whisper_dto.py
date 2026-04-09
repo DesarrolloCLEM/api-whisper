@@ -24,13 +24,18 @@ class AudioToTextResponse(BaseModel):
     text: str
     language: Optional[str] = None
     duration: float
+    audio_base64: Optional[str] = Field(
+        None,
+        description="Audio pregrabado en base64 (presente solo cuando se detecta saludo corto)",
+    )
     
     class Config:
         json_schema_extra = {
             "example": {
                 "text": "Hola, este es un ejemplo de transcripción",
                 "language": "es",
-                "duration": 5.2
+                "duration": 5.2,
+                "audio_base64": None
             }
         }
 
