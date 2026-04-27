@@ -80,6 +80,36 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 **Nota**: Las opciones 1 y 2 usan automáticamente los valores de `HOST` y `PORT` configurados en tu archivo `.env`.
 
+## Docker (recomendado para Dokploy)
+
+Se incluyen estos archivos para despliegue:
+- `Dockerfile`
+- `.dockerignore`
+- `docker-compose.yml`
+
+### Ejecutar local con Docker Compose
+
+```bash
+cp .env.docker.example .env
+docker compose up --build
+```
+
+API disponible en: `http://localhost:8000`
+
+### Despliegue en Dokploy
+
+1. Selecciona el repositorio y usa `Dockerfile` (build desde raíz del proyecto `api-whisper`).
+2. Configura variables de entorno (mínimas recomendadas):
+   - `HOST=0.0.0.0`
+   - `PORT=8000`
+   - `DEBUG=false`
+   - `WHISPER_MODEL=small` (si tienes poca RAM, usa `base` o `tiny`)
+   - `WHISPER_DEVICE=cpu`
+   - `WHISPER_COMPUTE_TYPE=int8`
+   - `WHISPER_NUM_WORKERS=1`
+3. Opcional: agrega `HF_TOKEN` para descargar modelos más rápido.
+4. Expón el puerto `8000` en Dokploy.
+
 ## Endpoints
 
 ### Health
