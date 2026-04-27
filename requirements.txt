@@ -27,4 +27,4 @@ elevenlabs>=1.0.0  # Para ElevenLabs TTS (opcional, solo si TTS_PROVIDER=elevenl
 python-dotenv==1.0.0
 pydub>=0.25.1
 # Python 3.13+ eliminó audioop; pydub lo necesita para conversión
-audioop-lts>=0.2.0
+audioop-lts>=0.2.0; python_version >= "3.13"
