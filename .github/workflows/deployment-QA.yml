@@ -1,0 +1,112 @@
+name: "⛅ Deploy API Whisper QA"
+
+on:
+  push:
+    branches:
+      - QA
+
+jobs:
+  Despliegue:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    # environment: "QA"
+    steps:
+      - name: 👨‍💻 Obteniendo código del repositorio
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Autenticacion en Google
+        id: auth
+        uses: "google-github-actions/auth@v2"
+        with:
+          project_id: "nubeclem"
+          token_format: "access_token"
+          workload_identity_provider: "projects/394865907417/locations/global/workloadIdentityPools/nubeclem/providers/git-dev-clem-global"
+          service_account: nube-clem-service@nubeclem.iam.gserviceaccount.com
+          audience: "https://iam.googleapis.com/projects/394865907417/locations/global/workloadIdentityPools/nubeclem/providers/git-dev-clem-global"
+
+      - name: 🔐 Validar Autenticación en GCP
+        id: test_gcloud
+        run: |
+          echo "Verificando cuenta activa..."
+          gcloud auth list --filter=status:ACTIVE --format="value(account)"
+
+          echo "Validando acceso al proyecto nubeclem..."
+          PROJECT_CHECK=$(gcloud projects describe nubeclem --format="value(projectId)")
+
+          if [ "$PROJECT_CHECK" == "nubeclem" ]; then
+            echo "✅ Autenticación exitosa para el proyecto: $PROJECT_CHECK"
+          else
+            echo "❌ Error: El ID del proyecto no coincide."
+            exit 1
+          fi
+
+      - name: 🔐 Obtener Secretos de GCP
+        id: secrets
+        uses: 'google-github-actions/get-secretmanager-secrets@v3'
+        with:
+          secrets: |-
+            SERVICE_ACCOUNT:projects/394865907417/secrets/service-account/versions/latest
+
+      - name: 🏠 Autenticando Docker en Google Artifact Registry
+        id: docker-auth
+        uses: "docker/login-action@v3"
+        with:
+          username: "oauth2accesstoken"
+          password: "${{ steps.auth.outputs.access_token }}"
+          registry: "us-central1-docker.pkg.dev"
+
+      - name: 📦 Construyendo y Subiendo el Contenedor con Cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            us-central1-docker.pkg.dev/nubeclem/api-whisper/api-whisper:${{ github.sha }}
+            us-central1-docker.pkg.dev/nubeclem/api-whisper/api-whisper:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Despliegue del contenedor en Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: api-whisper
+          region: us-central1
+          image: us-central1-docker.pkg.dev/nubeclem/api-whisper/api-whisper:${{ github.sha }}
+          timeout: "5m"
+          flags: >-
+            --cpu=2
+            --memory=4Gi
+            --concurrency=4
+            --cpu-boost
+            --cpu-throttling
+            --min-instances=0
+            --max-instances=5
+            --service-account=${{ steps.secrets.outputs.SERVICE_ACCOUNT }}
+            --allow-unauthenticated        
+          env_vars: |-
+            API_TITLE=Whisper API
+            API_VERSION=1.0.0
+            API_DESCRIPTION=API para conversión de audio a texto y texto a audio usando Whisper
+            HOST=0.0.0.0
+            DEBUG=false
+            DATABASE_URL=sqlite:///./api_keys.db
+            WHISPER_MODEL=large-v3-turbo
+            WHISPER_DEVICE=cpu
+            WHISPER_COMPUTE_TYPE=int8
+            WHISPER_LANGUAGE=es
+            WHISPER_NUM_WORKERS=1
+            WHISPER_VAD_FILTER=false
+            TTS_PROVIDER=google
+            API_KEY_HEADER_NAME=X-API-Key
+            API_KEY_LENGTH=32
+            AUDIO_UPLOADS_DIR=uploads/audio
+
+      - name: 🔗 Url de Cloud Run
+        run: echo ${{ steps.deploy.outputs.url }}
