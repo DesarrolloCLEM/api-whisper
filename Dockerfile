@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/home/appuser/.cache/huggingface
 
 WORKDIR /app
 
@@ -16,7 +17,10 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-RUN useradd -m appuser && chown -R appuser:appuser /app
+# Crear usuario appuser, directorios de caché y datos con permisos
+RUN useradd -m appuser && \
+    mkdir -p /home/appuser/.cache/huggingface /app/data && \
+    chown -R appuser:appuser /app /home/appuser
 USER appuser
 
 EXPOSE 8000
