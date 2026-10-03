@@ -104,7 +104,7 @@ jobs:
             WHISPER_LANGUAGE=es
             WHISPER_NUM_WORKERS=1
             WHISPER_VAD_FILTER=false
-            TTS_PROVIDER=google
+            TTS_PROVIDER=elevenlabs
             API_KEY_HEADER_NAME=X-API-Key
             API_KEY_LENGTH=32
             AUDIO_UPLOADS_DIR=uploads/audio
