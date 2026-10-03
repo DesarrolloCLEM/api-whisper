@@ -52,6 +52,7 @@ jobs:
         with:
           secrets: |-
             SERVICE_ACCOUNT:projects/394865907417/secrets/service-account/versions/latest
+            ELEVENLABS_API_KEY_QA:projects/394865907417/secrets/ELEVENLABS_API_KEY_QA/versions/latest
 
       - name: 🏠 Autenticando Docker en Google Artifact Registry
         id: docker-auth
@@ -107,6 +108,9 @@ jobs:
             API_KEY_HEADER_NAME=X-API-Key
             API_KEY_LENGTH=32
             AUDIO_UPLOADS_DIR=uploads/audio
+            TTS_PROVIDER=google
+            ELEVENLABS_API_KEY=${{ steps.secrets.outputs.ELEVENLABS_API_KEY_QA }}
+            ELEVENLABS_VOICE_ID=mFnznUnco6JVgxHqM0hj
 
       - name: 🔗 Url de Cloud Run
         run: echo ${{ steps.deploy.outputs.url }}
