@@ -108,7 +108,6 @@ jobs:
             API_KEY_HEADER_NAME=X-API-Key
             API_KEY_LENGTH=32
             AUDIO_UPLOADS_DIR=uploads/audio
-            TTS_PROVIDER=google
             ELEVENLABS_API_KEY=${{ steps.secrets.outputs.ELEVENLABS_API_KEY_QA }}
             ELEVENLABS_VOICE_ID=mFnznUnco6JVgxHqM0hj
 
