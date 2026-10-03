@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     # API Key Configuration
     api_key_header_name: str = "X-API-Key"
     api_key_length: int = 32
-    
+    static_api_key: str = ""  # API key fija válida sin pasar por la BD (no se pierde al reiniciar el contenedor)
+
     # Carpeta donde se guardan los audios recibidos antes de transcribir
     audio_uploads_dir: str = "uploads/audio"
     

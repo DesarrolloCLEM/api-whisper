@@ -1,3 +1,4 @@
+import hmac
 from fastapi import Depends, Header
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -24,6 +25,16 @@ async def get_api_key_user(
             details={"header": "X-API-Key"}
         )
     
+    # API key fija del .env: no depende de la BD
+    if settings.static_api_key and hmac.compare_digest(
+        x_api_key.encode(), settings.static_api_key.encode()
+    ):
+        return {
+            "api_key_id": None,
+            "name": "static",
+            "auth_type": "api_key"
+        }
+
     # Buscar API key en BD
     api_key = APIKeyRepository.get_by_key(db, x_api_key)
     

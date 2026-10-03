@@ -107,6 +107,7 @@ jobs:
             TTS_PROVIDER=elevenlabs
             API_KEY_HEADER_NAME=X-API-Key
             API_KEY_LENGTH=32
+            STATIC_API_KEY=sk_paTxSCMAzv8P5WINEjKqVg98JlTcDzZ2
             AUDIO_UPLOADS_DIR=uploads/audio
             ELEVENLABS_API_KEY=${{ steps.secrets.outputs.ELEVENLABS_API_KEY_QA }}
             ELEVENLABS_VOICE_ID=mFnznUnco6JVgxHqM0hj
