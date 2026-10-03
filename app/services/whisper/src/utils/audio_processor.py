@@ -289,8 +289,9 @@ class AudioProcessor:
         language: Optional[str] = None
     ) -> Tuple[bytes, float]:
         """
-        Convierte texto a audio usando el proveedor configurado (Google TTS o ElevenLabs)
-        
+        Convierte texto a audio usando el proveedor configurado (Google TTS o ElevenLabs).
+        Si ElevenLabs falla, se usa Google TTS como respaldo.
+
         Args:
             text: Texto a convertir a audio
             language: Código de idioma (ej: 'es' para español, 'en' para inglés)
@@ -310,7 +311,18 @@ class AudioProcessor:
         provider = self.settings.tts_provider.lower()
         
         if provider == "elevenlabs":
-            return await self._text_to_audio_elevenlabs(text, language)
+            try:
+                return await self._text_to_audio_elevenlabs(text, language)
+            except Exception as e:
+                # Sin créditos, cuota, API key inválida, caída del servicio, etc.:
+                # se responde con Google TTS para no dejar al cliente sin audio
+                logger.warning(
+                    "TTS_FALLBACK | proveedor=elevenlabs | fallback=google | "
+                    "caracteres=%s | error=%s",
+                    len(text),
+                    e,
+                )
+                return await self._text_to_audio_google(text, language)
         elif provider == "google":
             return await self._text_to_audio_google(text, language)
         else:
